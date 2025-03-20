@@ -13,7 +13,27 @@
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-		console.log(`Received Request: ${JSON.stringify(request, null, 2)}`);
-		return new Response('Hello World!');
+		// Get headers
+		const contentType = request.headers.get("Content-Type");
+		const userAgent = request.headers.get("User-Agent");
+
+		let body: any;
+
+		// Parse body based on Content-Type
+		if (contentType?.includes("application/json")) {
+			body = await request.json(); // Parse JSON body
+		} else if (contentType?.includes("text/plain")) {
+			body = await request.text(); // Parse text body
+		} else if (contentType?.includes("application/x-www-form-urlencoded")) {
+			body = await request.formData(); // Parse form data
+		} else {
+			body = await request.arrayBuffer(); // Default to raw bytes
+		}
+
+		console.log(`Received Request: ${JSON.stringify({ headers: Object.fromEntries(request.headers), body }, null, 2)}`);
+
+		return new Response(JSON.stringify({ headers: Object.fromEntries(request.headers), body }), {
+			headers: { "Content-Type": "application/json" },
+		});
 	},
 } satisfies ExportedHandler<Env>;
