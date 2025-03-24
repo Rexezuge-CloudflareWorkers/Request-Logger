@@ -12,28 +12,31 @@
  */
 
 export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		// Get headers
-		const contentType = request.headers.get("Content-Type");
-		const userAgent = request.headers.get("User-Agent");
+    async fetch(request, env, ctx): Promise<Response> {
+        const requestClone = request.clone();
 
-		let body: any;
+        // Get headers
+        const contentType = request.headers.get("Content-Type");
+        const userAgent = request.headers.get("User-Agent");
 
-		// Parse body based on Content-Type
-		if (contentType?.includes("application/json")) {
-			body = await request.json(); // Parse JSON body
-		} else if (contentType?.includes("text/plain")) {
-			body = await request.text(); // Parse text body
-		} else if (contentType?.includes("application/x-www-form-urlencoded")) {
-			body = await request.formData(); // Parse form data
-		} else {
-			body = await request.arrayBuffer(); // Default to raw bytes
-		}
+        let body: any;
 
-		console.log(`Received Request: ${JSON.stringify({ headers: Object.fromEntries(request.headers), body }, null, 2)}`);
+        // Parse body based on Content-Type
+        if (contentType?.includes("application/json")) {
+            body = await request.json(); // Parse JSON body
+        } else if (contentType?.includes("text/plain")) {
+            body = await request.text(); // Parse text body
+        } else if (contentType?.includes("application/x-www-form-urlencoded")) {
+            body = await request.formData(); // Parse form data
+        } else {
+            body = await request.arrayBuffer(); // Default to raw bytes
+        }
 
-		return new Response(JSON.stringify({ headers: Object.fromEntries(request.headers), body }), {
-			headers: { "Content-Type": "application/json" },
-		});
-	},
+        console.log(`Received Request: ${JSON.stringify({ headers: Object.fromEntries(request.headers), body }, null, 2)}`);
+        console.debug(`Raw Request Body: ${new TextDecoder().decode(await requestClone.arrayBuffer())}`);
+
+        return new Response(JSON.stringify({ headers: Object.fromEntries(request.headers), body }), {
+            headers: { "Content-Type": "application/json" },
+        });
+    },
 } satisfies ExportedHandler<Env>;
